@@ -6,7 +6,14 @@ import os
 class ContrastiveP2Model:
     def __init__(self, model_name='BAAI/bge-large-en-v1.5', device=None):
         if device is None:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            if torch.cuda.is_available():
+                # Fallback to CPU if VRAM is less than 6GB to prevent OOM
+                if torch.cuda.get_device_properties(0).total_memory < 6 * 1024**3:
+                    self.device = "cpu"
+                else:
+                    self.device = "cuda"
+            else:
+                self.device = "cpu"
         else:
             self.device = device
             
@@ -30,7 +37,7 @@ class ContrastiveP2Model:
             epochs=epochs,
             warmup_steps=int(len(train_dataloader) * epochs * 0.1),
             show_progress_bar=True,
-            use_amp=True
+            use_amp=(self.device == "cuda")
         )
 
     def predict(self, anchor, instruction):

@@ -16,7 +16,14 @@ ID_TO_LABEL = {i: label for i, label in enumerate(LABEL_LIST)}
 class DeBERTaDecomposer:
     def __init__(self, model_name='microsoft/deberta-v3-base', num_labels=9, device=None):
         if device is None:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            if torch.cuda.is_available():
+                # Fallback to CPU if VRAM is less than 6GB to prevent OOM
+                if torch.cuda.get_device_properties(0).total_memory < 6 * 1024**3:
+                    self.device = "cpu"
+                else:
+                    self.device = "cuda"
+            else:
+                self.device = "cpu"
         else:
             self.device = device
             
@@ -78,7 +85,8 @@ class DeBERTaDecomposer:
             weight_decay=0.01,
             logging_steps=10,
             report_to="none",
-            fp16=True
+            fp16=(self.device == "cuda"), # Only use fp16 if running on CUDA
+            use_cpu=(self.device == "cpu")
         )
 
         data_collator = DataCollatorForTokenClassification(self.tokenizer)
