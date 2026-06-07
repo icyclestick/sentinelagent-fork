@@ -1,5 +1,18 @@
 import sys
 import os
+
+# Auto-detect low VRAM and restart with CPU only to guarantee HuggingFace/Accelerate doesn't use CUDA
+if os.environ.get("CUDA_VISIBLE_DEVICES") != "-1":
+    try:
+        import subprocess
+        res = subprocess.check_output(['nvidia-smi', '--query-gpu=memory.total', '--format=csv,noheader,nounits'])
+        mem_mb = int(res.decode('utf-8').strip().split('\n')[0])
+        if mem_mb < 6000:
+            print(f"⚠️  Detected low VRAM GPU ({mem_mb} MB). Restricting PyTorch to CPU to prevent OOM...")
+            os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+    except Exception:
+        pass
 import json
 import numpy as np
 from scipy import stats

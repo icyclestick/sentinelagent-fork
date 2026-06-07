@@ -164,11 +164,12 @@ def create_token_labels_from_nli_data(training_data):
     Uses spaCy en_core_web_sm to bootstrap BIO token labels for each instruction.
     Labels: O, B-ACTION, I-ACTION, B-OBJECT, I-OBJECT, B-SCOPE, I-SCOPE, B-CONSTRAINTS, I-CONSTRAINTS
     """
+    import spacy
     try:
         nlp = spacy.load("en_core_web_sm")
     except OSError:
-        import spacy.cli
-        spacy.cli.download("en_core_web_sm")
+        from spacy.cli import download
+        download("en_core_web_sm")
         nlp = spacy.load("en_core_web_sm")
 
     labeled_data = []
