@@ -18,6 +18,8 @@ The script will:
 """
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # Force single GPU to avoid DataParallel issues
+
 import time
 import numpy as np
 import pandas as pd
